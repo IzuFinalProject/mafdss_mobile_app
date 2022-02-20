@@ -12,3 +12,5 @@ dependencies:
   flutter_dotenv: ^5.0.2
   user_repository:
     path: ../user_repository  
+  firebase_repository:
+    path: ../firebase_repository  

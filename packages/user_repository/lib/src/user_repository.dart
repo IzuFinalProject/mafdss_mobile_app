@@ -22,9 +22,10 @@ class UserRepository {
     var response = await http.get(
       Uri.parse(URL),
       headers: headers,
-    );
+    ).timeout(const Duration(seconds: 15));
     if (response.statusCode == 200) {
       final user = User.fromDatabaseJson(json.decode(response.body));
+      
       return user;
     } else {
       throw Exception(json.decode(response.body));

@@ -1,0 +1,15 @@
+name: firebase_repository
+description: Dart package which manages the user domain.
+publish_to: none
+
+environment:
+  sdk: ">=2.12.0-0 <3.0.0"
+
+dependencies:
+  flutter_local_notifications: ^9.2.0
+  firebase_analytics: 
+  firebase_core: 
+  firebase_messaging: 
+  awesome_notifications:
+  http: 
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:school_app/login/bloc/login_bloc.dart';
+import 'package:school_app/register/view/register_page.dart';
 
 class LoginForm extends StatelessWidget {
   @override
@@ -26,6 +27,7 @@ class LoginForm extends StatelessWidget {
             _PasswordInput(),
             const Padding(padding: EdgeInsets.all(12)),
             _LoginButton(),
+            _CreateAccountButton()
           ],
         ),
       ),
@@ -92,6 +94,30 @@ class _LoginButton extends StatelessWidget {
                     : null,
               );
       },
+    );
+  }
+}
+
+class _CreateAccountButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        const Text('Doesn\'t have account?'),
+        TextButton(
+          child: const Text(
+            'Sign Up',
+            style: TextStyle(fontSize: 20),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              RegisterPage.route()
+              );
+          },
+        )
+      ],
+      mainAxisAlignment: MainAxisAlignment.center,
     );
   }
 }

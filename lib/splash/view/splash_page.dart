@@ -7,8 +7,19 @@ class SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+    return  Scaffold(
+     body: Center(  
+          child: Column(   
+             mainAxisAlignment: MainAxisAlignment.center,
+  crossAxisAlignment: CrossAxisAlignment.center,           
+            children: <Widget>[  
+              Image.asset('assets/images/mafdss.png'),  
+              const CircularProgressIndicator()
+            ],  
+          ),  
+        )
     );
   }
+  
 }
+
