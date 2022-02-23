@@ -1,12 +1,23 @@
+import 'package:authentication_repository/utility/util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:school_app/login/bloc/login_bloc.dart';
 import 'package:school_app/register/view/register_page.dart';
+ Future<String?> getTokenHere() async {
+           var token = await Util.getToken("token");
 
+    return token;
+  }
+  
 class LoginForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final token = getTokenHere();
+    if(token != null){
+      context.read<LoginBloc>().add(LoginStarted());
+    }
+    
     return BlocListener<LoginBloc, LoginState>(
       listener: (context, state) {
         if (state.status.isSubmissionFailure) {

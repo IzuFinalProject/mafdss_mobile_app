@@ -49,6 +49,9 @@ class AuthenticationRepository {
       throw Exception(json.decode(e.toString()));
     }
   }
+void tryLogin()  {
+_controller.add(AuthenticationStatus.authenticated);
+  }
 
   Future<void> logIn({
     required String username,
@@ -116,6 +119,7 @@ class AuthenticationRepository {
   }
 
   void logOut() {
+    Util.removeToken();
     _controller.add(AuthenticationStatus.unauthenticated);
   }
   void dispose() => _controller.close();

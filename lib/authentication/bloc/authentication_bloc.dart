@@ -58,12 +58,7 @@ class AuthenticationBloc
   ) {
     _authenticationRepository.logOut();
   }
-    void _onAuthenticationProfilepageRequested(
-    AuthenticationProfilepageRequested event,
-    Emitter<AuthenticationState> emit,
-  ) {
     
-  }
 
   Future<User?> _tryGetUser() async {
     try {

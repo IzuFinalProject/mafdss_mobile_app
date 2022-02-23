@@ -1,9 +1,12 @@
+import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/src/provider.dart';
 import 'package:school_app/authentication/bloc/authentication_bloc.dart';
-import 'package:school_app/profile/view/button_widget.dart';
+import 'package:school_app/profile/view/edit_profile_page.dart';
+import 'package:school_app/profile/widget/button_widget.dart';
 import 'package:school_app/profile/widget/profile_widget.dart';
+import 'package:school_app/themes.dart';
 import 'package:user_repository/user_repository.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -18,26 +21,35 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = context.select(
-                  (AuthenticationBloc bloc) => bloc.state.user,
-                );
+      (AuthenticationBloc bloc) => bloc.state.user,
+    );
+    
 
-    return Scaffold(
-       appBar : AppBar(leading: const BackButton(), title: const Text('Profile'), actions: [
-        IconButton(onPressed: () {}, icon: const Icon(CupertinoIcons.moon))]),
-      body: ListView(
-        physics: const BouncingScrollPhysics(),
-        children: [
-          ProfileWidget(
-            imagePath: user.profileImage,
-            onClicked: () async {},
+    return ThemeSwitchingArea(
+      child: Builder(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+              leading: const BackButton(),
+              title: const Text('Profile'),
+              actions: []),
+          body: ListView(
+            physics: const BouncingScrollPhysics(),
+            children: [
+              ProfileWidget(
+                imagePath: user.profileImage,
+                onClicked: () {
+                  Navigator.push(context, EditProfilePage.route());
+                },
+              ),
+              const SizedBox(height: 24),
+              buildName(user),
+              const SizedBox(height: 24),
+              Center(child: buildUpgradeButton()),
+              const SizedBox(height: 24),
+              buildAbout(user),
+            ],
           ),
-          const SizedBox(height: 24),
-          buildName(user),
-          const SizedBox(height: 24),
-          Center(child: buildUpgradeButton()),
-          const SizedBox(height: 24),
-          buildAbout(user),
-        ],
+        ),
       ),
     );
   }
@@ -45,13 +57,13 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget buildName(User user) => Column(
         children: [
           Text(
-            user.first_name + " "+user.last_name,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+            user.first_name + " " + user.last_name,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
           ),
           const SizedBox(height: 4),
           Text(
             user.email,
-            style: const TextStyle(color: Colors.grey),
+            style: TextStyle(color: Colors.grey),
           )
         ],
       );

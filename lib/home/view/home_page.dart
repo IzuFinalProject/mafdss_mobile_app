@@ -1,9 +1,11 @@
+import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:school_app/authentication/bloc/authentication_bloc.dart';
 import 'package:school_app/profile/profile.dart';
 import 'package:school_app/services/notification_service.dart';
+import 'package:school_app/themes.dart';
 
 class HomePage extends StatelessWidget {
   static Route route() {
@@ -12,12 +14,16 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
           leading: const BackButton(),
           title: const Text('Home'),
           actions: [
-            IconButton(onPressed: () {}, icon: const Icon(CupertinoIcons.moon)),
+            IconButton(onPressed: () { ThemeSwitcher.of(context).changeTheme(
+                          theme: isDarkMode
+                              ? MyThemes.lightTheme
+                              : MyThemes.darkTheme);}, icon: const Icon(CupertinoIcons.moon)),
             PopupMenuButton(itemBuilder: (context) {
               return [
                 const PopupMenuItem(

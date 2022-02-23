@@ -18,8 +18,11 @@ dependencies:
   splashscreen: ^1.3.5
   flutter_dotenv: ^5.0.2
   shared_preferences: ^2.0.12
+  animated_theme_switcher: ^2.0.6
   awesome_notifications:
   equatable: ^2.0.0
+  image_picker:
+  cached_network_image:
   authentication_repository:
     path: packages/authentication_repository
   user_repository:

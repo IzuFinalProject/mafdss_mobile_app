@@ -12,12 +12,21 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     required AuthenticationRepository authenticationRepository,
   })  : _authenticationRepository = authenticationRepository,
         super(const LoginState()) {
+    on<LoginStarted>(_onStart);
     on<LoginUsernameChanged>(_onUsernameChanged);
     on<LoginPasswordChanged>(_onPasswordChanged);
     on<LoginSubmitted>(_onSubmitted);
   }
 
   final AuthenticationRepository _authenticationRepository;
+
+
+  void _onStart(
+    LoginStarted event,
+    Emitter<LoginState> emit,
+  ) {
+    _authenticationRepository.tryLogin();
+  }
 
   void _onUsernameChanged(
     LoginUsernameChanged event,

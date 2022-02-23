@@ -8,6 +8,9 @@ import 'models/models.dart';
 class UserRepository {
   User? _user;
 
+ Future<bool> uploadUserImage(dynamic images) async {
+   return true;
+ }
   Future<User?> getUser() async {
     if (_user != null) return _user;
     var token = await Util.getToken("token");
