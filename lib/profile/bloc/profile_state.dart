@@ -1,20 +1,26 @@
 part of 'profile_bloc.dart';
 
-class ProfileState extends Equatable {
-  const ProfileState({
-    this.images,
-  });
+@immutable
+abstract class ProfileState {
+  const ProfileState();
+}
 
-  final dynamic images;
+class ProfileInitial extends ProfileState {
+  const ProfileInitial();
+}
 
-  ProfileState copyWith({
-    dynamic? images,
-  }) {
-    return ProfileState(
-      images: images ?? this.images,
-    );
-  }
+class ProfileLoading extends ProfileState {
+  const ProfileLoading();
+}
 
-  @override
-  List<Object> get props => [images];
+class ProfileLoaded extends ProfileState {
+  final Profile profile;
+  const ProfileLoaded(this.profile);
+   @override
+  List<Object> get props => [profile];
+}
+
+class ProfileError extends ProfileState {
+  final String error;
+  const ProfileError(this.error);
 }

@@ -1,0 +1,208 @@
+// import 'package:flutter/material.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:school_app/authentication/bloc/authentication_bloc.dart';
+// import 'package:school_app/profile/bloc/profile_bloc.dart';
+// import 'package:school_app/profile/widget/button_widget.dart';
+// import 'package:school_app/profile/widget/profile_widget.dart';
+// import 'package:school_app/profile/widget/textfield_widget.dart';
+// import 'package:user_repository/user_repository.dart';
+
+// typedef OnPickImageCallback = void Function(
+//     double? maxWidth, double? maxHeight, int? quality);
+
+// class EditProfileForm extends StatefulWidget {
+//   EditProfileForm({Key? key}) : super(key: key);
+
+//   @override
+//   State<EditProfileForm> createState() => _EditProfileFormState();
+// }
+
+// class _EditProfileFormState extends State<EditProfileForm> {
+//   List<XFile>? _imageFileList;
+//   dynamic _pickImageError;
+//   set _imageFile(XFile? value) {
+//     _imageFileList = value == null ? null : <XFile>[value];
+//   }
+//    String _username ="";
+//    String _email ="";
+
+//   final TextEditingController maxWidthController = TextEditingController();
+//   final TextEditingController maxHeightController = TextEditingController();
+//   final TextEditingController qualityController = TextEditingController();
+//   final ImagePicker _picker = ImagePicker();
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return BlocConsumer<ProfileBloc, ProfileState>(
+//             builder: (context, state) {
+//                if( state is ProfileLoading){
+//                 return buildLoadingState();
+//               }
+//               else if  (state is ProfileLoaded) {
+//                 return buildUserData(context,state.profile);
+//               }
+//               else{
+//                 return const Center(child: Text("error"));
+//               }
+//             },
+//             listener: (context, state) {
+//               if (state is ProfileError) {
+//                 Scaffold.of(context).showSnackBar(
+//                   SnackBar(
+//                     content: Text(state.error),
+//                   ),
+//                 );
+//               }
+//             },
+//           );
+//   }
+
+//   Widget buildUserData(BuildContext ctx, Profile profile) {
+//     return ListView(children: [
+//       ProfileWidget(
+//         imagePath: profile.profileImage,
+//         isEdit: true,
+//         onClicked: () {
+//           _onImageButtonPressed(ImageSource.gallery, context: ctx);
+//         },
+//       ),
+//       const SizedBox(height: 12),
+//       TextFieldWidget(
+//         label: 'Username',
+//         text: profile.username,
+//         onChanged: (username) {setState(() {
+//           _username=username;
+//         });},
+//       ),
+//       const SizedBox(height: 12),
+//       TextFieldWidget(
+//         label: 'Email',
+//         text: profile.email,
+//         onChanged: (email) {setState(() {
+//           _email = email;
+//         });},
+//       ),
+//       const SizedBox(height: 12),
+//       ButtonWidget(onClicked: () {
+//         context.read<ProfileBloc>().add(EditUser(userName: _username,email: _email,profileImage: _imageFileList));
+//       },text: "Edit",)
+//     ]
+//     );
+//   }
+
+//   Future<void> _onImageButtonPressed(ImageSource source,
+//       {BuildContext? context, bool isMultiImage = false}) async {
+//     if (isMultiImage) {
+//       await _displayPickImageDialog(context!,
+//           (double? maxWidth, double? maxHeight, int? quality) async {
+//         try {
+//           final List<XFile>? pickedFileList = await _picker.pickMultiImage(
+//             maxWidth: maxWidth,
+//             maxHeight: maxHeight,
+//             imageQuality: quality,
+//           );
+//           setState(() {
+//             _imageFileList = pickedFileList;
+//           });
+//         } catch (e) {
+//           setState(() {
+//             _pickImageError = e;
+//           });
+//           ScaffoldMessenger.of(context)
+//             ..hideCurrentSnackBar()
+//             ..showSnackBar(
+//               const SnackBar(content: Text('Error while uploading Image/s')),
+//             );
+//         }
+//       });
+//     }
+//     else {
+//       await _displayPickImageDialog(context!,
+//           (double? maxWidth, double? maxHeight, int? quality) async {
+//             print(maxHeight );
+//         try {
+//           final XFile? pickedFile = await _picker.pickImage(
+//             source: source,
+//             maxWidth: maxWidth,
+//             maxHeight: maxHeight,
+//             imageQuality: quality,
+//           );
+//           setState(() {
+//             _imageFile = pickedFile;
+//           });
+//           print(_imageFileList.toString());
+//         } catch (e) {
+//           setState(() {
+//             _pickImageError = e;
+//           });
+//         }
+//       });
+//     }
+//   }
+
+//   Future<void> _displayPickImageDialog(
+//       BuildContext context, OnPickImageCallback onPick) async {
+//     return showDialog(
+//         context: context,
+//         builder: (BuildContext context) {
+//           return AlertDialog(
+//                 title: const Text('Add optional parameters'),
+//                 content: Column(
+//                   children: <Widget>[
+//                     TextField(
+//                       controller: maxWidthController,
+//                       keyboardType:
+//                           const TextInputType.numberWithOptions(decimal: true),
+//                       decoration: const InputDecoration(
+//                           hintText: 'Enter maxWidth if desired'),
+//                     ),
+//                     TextField(
+//                       controller: maxHeightController,
+//                       keyboardType:
+//                           const TextInputType.numberWithOptions(decimal: true),
+//                       decoration: const InputDecoration(
+//                           hintText: 'Enter maxHeight if desired'),
+//                     ),
+//                     TextField(
+//                       controller: qualityController,
+//                       keyboardType: TextInputType.number,
+//                       decoration: const InputDecoration(
+//                           hintText: 'Enter quality if desired'),
+//                     ),
+//                   ],
+//                 ),
+//                 actions: <Widget>[
+//                   TextButton(
+//                     child: const Text('Cancl'),
+//                     onPressed: () {
+//                       Navigator.of(context).pop();
+//                     },
+//                   ),
+//                   TextButton(
+//                       child: const Text('Pick'),
+//                       onPressed: () {
+//                         final double? width = maxWidthController.text.isNotEmpty
+//                             ? double.parse(maxWidthController.text)
+//                             : null;
+//                         final double? height =
+//                             maxHeightController.text.isNotEmpty
+//                                 ? double.parse(maxHeightController.text)
+//                                 : null;
+//                         final int? quality = qualityController.text.isNotEmpty
+//                             ? int.parse(qualityController.text)
+//                             : null;
+//                         onPick(width, height, quality);
+//                         Navigator.of(context).pop();
+//                          }),
+//                 ],
+//               );
+//         });
+//   }
+
+//   Widget buildLoadingState() {
+//     return const Center(
+//       child: CircularProgressIndicator(),
+//     );
+//   }
+// }

@@ -1,93 +1,349 @@
-import 'package:animated_theme_switcher/animated_theme_switcher.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/src/provider.dart';
-import 'package:school_app/authentication/bloc/authentication_bloc.dart';
-import 'package:school_app/profile/view/edit_profile_page.dart';
-import 'package:school_app/profile/widget/button_widget.dart';
-import 'package:school_app/profile/widget/profile_widget.dart';
-import 'package:school_app/themes.dart';
-import 'package:user_repository/user_repository.dart';
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
 
-class ProfilePage extends StatefulWidget {
-  @override
-  _ProfilePageState createState() => _ProfilePageState();
+// ignore_for_file: public_member_api_docs
+
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:school_app/profile/bloc/profile_bloc.dart';
+import 'package:user_repository/user_repository.dart';
+import 'package:video_player/video_player.dart';
+
+class ProfilePage extends StatelessWidget {
   static Route route() {
     return MaterialPageRoute<void>(builder: (_) => ProfilePage());
   }
-}
 
-class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
-    final user = context.select(
-      (AuthenticationBloc bloc) => bloc.state.user,
-    );
-    
-
-    return ThemeSwitchingArea(
-      child: Builder(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-              leading: const BackButton(),
-              title: const Text('Profile'),
-              actions: []),
-          body: ListView(
-            physics: const BouncingScrollPhysics(),
-            children: [
-              ProfileWidget(
-                imagePath: user.profileImage,
-                onClicked: () {
-                  Navigator.push(context, EditProfilePage.route());
-                },
-              ),
-              const SizedBox(height: 24),
-              buildName(user),
-              const SizedBox(height: 24),
-              Center(child: buildUpgradeButton()),
-              const SizedBox(height: 24),
-              buildAbout(user),
-            ],
-          ),
-        ),
-      ),
+    return const MaterialApp(
+      title: 'Image Picker Demo',
+      home: MyHomePage(title: 'Image Picker Example'),
     );
   }
-
-  Widget buildName(User user) => Column(
-        children: [
-          Text(
-            user.first_name + " " + user.last_name,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            user.email,
-            style: TextStyle(color: Colors.grey),
-          )
-        ],
-      );
-
-  Widget buildUpgradeButton() => ButtonWidget(
-        text: 'Upgrade To PRO',
-        onClicked: () {},
-      );
-
-  Widget buildAbout(User user) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 48),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'About',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16),
-            Text(
-              "A user is a person who utilizes a computer or network service. A user often has a user account and is identified to the system by a username. Other terms for username include login name, screenname, account name, nickname and handle, which is derived from the identical citizens band radio term.",
-              style: TextStyle(fontSize: 16, height: 1.4),
-            ),
-          ],
-        ),
-      );
 }
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key, this.title}) : super(key: key);
+
+  final String? title;
+
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  List<XFile>? _imageFileList;
+
+  set _imageFile(XFile? value) {
+    _imageFileList = value == null ? null : <XFile>[value];
+  }
+
+  dynamic _pickImageError;
+  bool isVideo = false;
+
+  String? _retrieveDataError;
+
+  final ImagePicker _picker = ImagePicker();
+  final TextEditingController maxWidthController = TextEditingController();
+  final TextEditingController maxHeightController = TextEditingController();
+  final TextEditingController qualityController = TextEditingController();
+
+  Future<void> _onImageButtonPressed(ImageSource source,
+      {BuildContext? context, bool isMultiImage = false}) async {
+    if (isMultiImage) {
+      await _displayPickImageDialog(context!,
+          (double? maxWidth, double? maxHeight, int? quality) async {
+        try {
+          final List<XFile>? pickedFileList = await _picker.pickMultiImage(
+            maxWidth: maxWidth,
+            maxHeight: maxHeight,
+            imageQuality: quality,
+          );
+          setState(() {
+            _imageFileList = pickedFileList;
+          });
+          print("Image is done");
+          context
+              .read<ProfileBloc>()
+              .add(EditUserProfilePicture(profileImage: _imageFileList));
+        } catch (e) {
+          setState(() {
+            _pickImageError = e;
+          });
+        }
+      });
+    } else {
+      await _displayPickImageDialog(context!,
+          (double? maxWidth, double? maxHeight, int? quality) async {
+        try {
+          final XFile? pickedFile = await _picker.pickImage(
+            source: source,
+            maxWidth: maxWidth,
+            maxHeight: maxHeight,
+            imageQuality: quality,
+          );
+          setState(() {
+            _imageFile = pickedFile;
+          });
+          print("Image is done");
+          context
+              .read<ProfileBloc>()
+              .add(EditUserProfilePicture(profileImage: _imageFileList));
+        } catch (e) {
+          setState(() {
+            _pickImageError = e;
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    maxWidthController.dispose();
+    maxHeightController.dispose();
+    qualityController.dispose();
+    super.dispose();
+  }
+
+  Widget _previewImages() {
+    final Text? retrieveError = _getRetrieveErrorWidget();
+    if (retrieveError != null) {
+      return retrieveError;
+    }
+    if (_imageFileList != null) {
+      return Semantics(
+          child: ListView.builder(
+            key: UniqueKey(),
+            itemBuilder: (BuildContext context, int index) {
+              // Why network for web?
+              // See https://pub.dev/packages/image_picker#getting-ready-for-the-web-platform
+              return Semantics(
+                label: 'image_picker_example_picked_image',
+                child: kIsWeb
+                    ? Image.network(_imageFileList![index].path)
+                    : Image.file(File(_imageFileList![index].path)),
+              );
+            },
+            itemCount: _imageFileList!.length,
+          ),
+          label: 'image_picker_example_picked_images');
+    } else if (_pickImageError != null) {
+      return Text(
+        'Pick image error: $_pickImageError',
+        textAlign: TextAlign.center,
+      );
+    } else {
+      return const Text(
+        'You have not yet picked an image.',
+        textAlign: TextAlign.center,
+      );
+    }
+  }
+
+  Widget _handlePreview() {
+    return _previewImages();
+  }
+
+  Future<void> retrieveLostData() async {
+    final LostDataResponse response = await _picker.retrieveLostData();
+    if (response.isEmpty) {
+      return;
+    }
+    if (response.file != null) {
+      if (response.type == RetrieveType.image) {
+        setState(() {
+          _imageFile = response.file;
+          _imageFileList = response.files;
+        });
+      }
+    } else {
+      _retrieveDataError = response.exception!.code;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+        create: (context) => ProfileBloc(UserRepository()),
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title!),
+          ),
+          body: Center(
+            child: !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+                ? FutureBuilder<void>(
+                    future: retrieveLostData(),
+                    builder:
+                        (BuildContext context, AsyncSnapshot<void> snapshot) {
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.none:
+                        case ConnectionState.waiting:
+                          return const Text(
+                            'You have not yet picked an image.',
+                            textAlign: TextAlign.center,
+                          );
+                        case ConnectionState.done:
+                          return _handlePreview();
+                        default:
+                          if (snapshot.hasError) {
+                            return Text(
+                              'Pick image/video error: ${snapshot.error}}',
+                              textAlign: TextAlign.center,
+                            );
+                          } else {
+                            return const Text(
+                              'You have not yet picked an image.',
+                              textAlign: TextAlign.center,
+                            );
+                          }
+                      }
+                    },
+                  )
+                : _handlePreview(),
+          ),
+          floatingActionButton: BlocConsumer<ProfileBloc, ProfileState>(
+            builder: (context, state) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  Semantics(
+                    label: 'image_picker_example_from_gallery',
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        isVideo = false;
+                        _onImageButtonPressed(ImageSource.gallery,
+                            context: context);
+                      },
+                      heroTag: 'image0',
+                      tooltip: 'Pick Image from gallery',
+                      child: const Icon(Icons.photo),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        isVideo = false;
+                        _onImageButtonPressed(
+                          ImageSource.gallery,
+                          context: context,
+                          isMultiImage: true,
+                        );
+                      },
+                      heroTag: 'image1',
+                      tooltip: 'Pick Multiple Image from gallery',
+                      child: const Icon(Icons.photo_library),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16.0),
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        isVideo = false;
+                        _onImageButtonPressed(ImageSource.camera,
+                            context: context);
+                      },
+                      heroTag: 'image2',
+                      tooltip: 'Take a Photo',
+                      child: const Icon(Icons.camera_alt),
+                    ),
+                  )
+                ],
+              );
+            },
+            listener: (context, state) {
+              if (state is ProfileError) {
+                Scaffold.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.error),
+                  ),
+                );
+              }
+            },
+          ),
+        ));
+  }
+
+  Text? _getRetrieveErrorWidget() {
+    if (_retrieveDataError != null) {
+      final Text result = Text(_retrieveDataError!);
+      _retrieveDataError = null;
+      return result;
+    }
+    return null;
+  }
+
+  Future<void> _displayPickImageDialog(
+      BuildContext context, OnPickImageCallback onPick) async {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Add optional parameters'),
+            content: Column(
+              children: <Widget>[
+                TextField(
+                  controller: maxWidthController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                      hintText: 'Enter maxWidth if desired'),
+                ),
+                TextField(
+                  controller: maxHeightController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                      hintText: 'Enter maxHeight if desired'),
+                ),
+                TextField(
+                  controller: qualityController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                      hintText: 'Enter quality if desired'),
+                ),
+              ],
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('CANCEL'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                  child: const Text('PICK'),
+                  onPressed: () {
+                    final double? width = maxWidthController.text.isNotEmpty
+                        ? double.parse(maxWidthController.text)
+                        : null;
+                    final double? height = maxHeightController.text.isNotEmpty
+                        ? double.parse(maxHeightController.text)
+                        : null;
+                    final int? quality = qualityController.text.isNotEmpty
+                        ? int.parse(qualityController.text)
+                        : null;
+                    onPick(width, height, quality);
+                    Navigator.of(context).pop();
+                  }),
+            ],
+          );
+        });
+  }
+}
+
+typedef OnPickImageCallback = void Function(
+    double? maxWidth, double? maxHeight, int? quality);

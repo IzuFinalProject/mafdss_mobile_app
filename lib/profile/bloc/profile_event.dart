@@ -1,20 +1,17 @@
 part of 'profile_bloc.dart';
 
+@immutable
+abstract class ProfileEvent {}
 
-
-abstract class ProfileEvent extends Equatable {
-  const ProfileEvent();
-
-  @override
-  List<Object> get props => [];
+class GetUser extends ProfileEvent {
+  GetUser();
 }
-
-class ImageUpload extends ProfileEvent {
-  const ImageUpload(this.images);
-
-  final dynamic images;
-
-  @override
-  List<Object> get props => [images];
+class EditUser extends ProfileEvent {
+  final String userName;
+  final String email;
+  EditUser({required this.userName,required this.email});
 }
-
+class EditUserProfilePicture extends ProfileEvent {
+  final dynamic profileImage;
+  EditUserProfilePicture({required this.profileImage});
+}
