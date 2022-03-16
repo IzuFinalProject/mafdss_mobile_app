@@ -1,14 +1,8 @@
 part of 'profile_bloc.dart';
 
-@immutable
-abstract class ProfileState {
+ class ProfileState {
   const ProfileState();
 }
-
-class ProfileInitial extends ProfileState {
-  const ProfileInitial();
-}
-
 class ProfileLoading extends ProfileState {
   const ProfileLoading();
 }

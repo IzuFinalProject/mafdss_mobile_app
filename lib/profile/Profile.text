@@ -1,14 +1,9 @@
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/src/provider.dart';
-import 'package:school_app/authentication/bloc/authentication_bloc.dart';
 import 'package:school_app/profile/bloc/profile_bloc.dart';
-import 'package:school_app/profile/view/edit_profile_page.dart';
 import 'package:school_app/profile/widget/button_widget.dart';
 import 'package:school_app/profile/widget/profile_widget.dart';
-import 'package:school_app/themes.dart';
 import 'package:user_repository/user_repository.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -21,6 +16,11 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ThemeSwitchingArea(
       child: Builder(
@@ -30,17 +30,29 @@ class _ProfilePageState extends State<ProfilePage> {
               title: const Text('Profile'),
               actions: []),
           body: BlocProvider(
-            create: (context) => ProfileBloc(UserRepository()),
+            create: (context) =>
+                ProfileBloc(UserRepository())..add((GetUser())),
             child: ListView(
               physics: const BouncingScrollPhysics(),
               children: [
                 Container(
                   child: BlocConsumer<ProfileBloc, ProfileState>(
                     builder: (context, state) {
-                      return buildUserData( Profile(
-                          username: "username",
-                          email: "email",
-                          profileImage: "https://www.shareicon.net/data/128x128/2016/07/26/802043_man_512x512.png"));
+                      if (state is ProfileLoaded) {
+                        return buildUserData(Profile(
+                            username: state.profile.username,
+                            email: state.profile.email,
+                            fileList: state.profile.fileList));
+                      }
+                      else if (state is ProfileError) {
+                        final msg = state.error;
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            SnackBar(content: Text(msg)),
+                          );
+                      }
+                        return const Center(child: CircularProgressIndicator());
                     },
                     listener: (context, state) {
                       if (state is ProfileError) {
@@ -64,9 +76,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Column buildUserData(Profile profile) {
     return Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
       ProfileWidget(
-        imagePath: profile.profileImage,
+        imagePath: "",
         onClicked: () {
-          Navigator.push(context, EditProfilePage.route());
+          // Navigator.push(context, EditProfilePage.route());
         },
       ),
       const SizedBox(height: 24),

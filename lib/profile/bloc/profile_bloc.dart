@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ffi';
 
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
@@ -11,7 +10,8 @@ part 'profile_state.dart';
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final UserRepository _profileRepo;
 
-  ProfileBloc(this._profileRepo) : super(const ProfileInitial()) {
+  ProfileBloc(this._profileRepo) : 
+        super(const ProfileState()) {
     on<GetUser>(_onGetUser);
     on<EditUser>(_onEditUser);
     on<EditUserProfilePicture>(_onEditUserProfilePicture);
@@ -28,14 +28,18 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   void _onEditUser(EditUser event, Emitter<ProfileState> emit) async {
     
       emit(const ProfileLoading());
-      final profile = await _profileRepo.editProfile(Profile(username: event.userName, email: event.email));
+      final profile = await _profileRepo.editProfile(Profile(username: event.userName, email: event.email,fileList: []));
       emit(ProfileLoaded(profile));
     
   }
   void _onEditUserProfilePicture(EditUserProfilePicture event, Emitter<ProfileState> emit) async {
-      print("Uploading profile pictue");
-      print(event.profileImage);
       emit(const ProfileLoading());
-      await _profileRepo.editProfilePicture(event.profileImage);
+      try {
+        await _profileRepo.editProfilePicture(event.profileImage);
+        final profile = await _profileRepo.getProfile();
+        emit(ProfileLoaded(profile!));
+      } catch (e) {
+        emit(const ProfileError("Uploading profile pictue failed! Try Again (:"));
+      }
   }
 }
